@@ -70,6 +70,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -241,7 +242,7 @@ private fun MainShell(
     Scaffold(
         topBar = {
             Column {
-                CivicTopBar()
+                CivicTopBar(target = target)
                 TargetModeBar(target = target, onTargetChange = onTargetChange)
             }
         },
@@ -277,6 +278,7 @@ private fun MainShell(
         ) { tab ->
             when (tab) {
                 0 -> HomeScreen(
+                    target = target,
                     onGoToLearn = { selectedTab = 1 },
                     onGoToPractice = { selectedTab = 2 },
                     onStartQuiz = onStartQuiz,
@@ -293,7 +295,8 @@ private fun MainShell(
 }
 
 @Composable
-private fun CivicTopBar() {
+private fun CivicTopBar(target: ExamTarget) {
+    val accent = targetAccent(target)
     Surface(color = MaterialTheme.colorScheme.background) {
         Row(
             modifier = Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 20.dp, vertical = 12.dp),
@@ -302,7 +305,7 @@ private fun CivicTopBar() {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                 Box(
                     modifier = Modifier.size(44.dp).clip(RoundedCornerShape(14.dp))
-                        .background(Brush.linearGradient(listOf(CivicBlue, CivicNavy))),
+                        .background(Brush.linearGradient(listOf(accent, CivicNavy))),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text("RF", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
@@ -310,7 +313,13 @@ private fun CivicTopBar() {
                 Spacer(Modifier.width(11.dp))
                 Column {
                     Text("Mon Civique", style = MaterialTheme.typography.titleLarge)
-                    Text("Objectif République", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Objectif République", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Spacer(Modifier.width(6.dp))
+                        Surface(color = accent.copy(alpha = 0.18f), shape = RoundedCornerShape(50)) {
+                            Text(target.shortLabel, color = accent, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
                 }
             }
         }
@@ -328,13 +337,21 @@ private fun TargetModeBar(target: ExamTarget, onTargetChange: (ExamTarget) -> Un
             )
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 5.dp)) {
                 items(ExamTarget.entries) { option ->
+                    val accent = targetAccent(option)
                     FilterChip(
                         selected = target == option,
                         onClick = { onTargetChange(option) },
                         label = { Text(option.shortLabel, maxLines = 1) },
                         leadingIcon = if (target == option) {
-                            { Icon(Icons.Default.CheckCircle, contentDescription = "Parcours sélectionné", modifier = Modifier.size(18.dp)) }
+                            { Icon(Icons.Default.CheckCircle, contentDescription = "Parcours sélectionné", tint = accent, modifier = Modifier.size(18.dp)) }
                         } else null,
+                        colors = FilterChipDefaults.filterChipColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            selectedContainerColor = accent.copy(alpha = 0.22f),
+                            selectedLabelColor = accent,
+                            selectedLeadingIconColor = accent,
+                        ),
                     )
                 }
             }
@@ -344,6 +361,7 @@ private fun TargetModeBar(target: ExamTarget, onTargetChange: (ExamTarget) -> Un
 
 @Composable
 private fun HomeScreen(
+    target: ExamTarget,
     onGoToLearn: () -> Unit,
     onGoToPractice: () -> Unit,
     onStartQuiz: (CivicThemeId) -> Unit,
@@ -358,7 +376,7 @@ private fun HomeScreen(
             Text("Bonjour 👋", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text("Prêt à progresser ?", style = MaterialTheme.typography.headlineMedium)
         }
-        item { HeroPreparationCard(progress = progress, onOpenExam = onOpenExam) }
+        item { HeroPreparationCard(target = target, progress = progress, onOpenExam = onOpenExam) }
         item {
             SectionHeader("Raccourcis", "Tout votre parcours en un geste")
             Spacer(Modifier.height(10.dp))
@@ -384,14 +402,15 @@ private fun HomeScreen(
 }
 
 @Composable
-private fun HeroPreparationCard(progress: ProgressSnapshot, onOpenExam: () -> Unit) {
+private fun HeroPreparationCard(target: ExamTarget, progress: ProgressSnapshot, onOpenExam: () -> Unit) {
+    val accent = targetAccent(target)
     Card(
         shape = RoundedCornerShape(28.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
     ) {
         Box(
             modifier = Modifier.fillMaxWidth()
-                .background(Brush.linearGradient(listOf(CivicNavy, CivicBlue, Color(0xFF4D7EEA))))
+                .background(Brush.linearGradient(listOf(CivicNavy, accent, accent.copy(alpha = 0.78f))))
                 .padding(22.dp),
         ) {
             Canvas(modifier = Modifier.matchParentSize()) {
@@ -401,14 +420,19 @@ private fun HeroPreparationCard(progress: ProgressSnapshot, onOpenExam: () -> Un
             Column {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Surface(color = Color.White.copy(alpha = 0.14f), shape = RoundedCornerShape(50)) {
-                            Text(readinessLabel(progress.readinessStatus).uppercase(), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(7.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Surface(color = Color.White.copy(alpha = 0.14f), shape = RoundedCornerShape(50)) {
+                                Text(readinessLabel(progress.readinessStatus).uppercase(), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp))
+                            }
+                            Surface(color = Color.White.copy(alpha = 0.14f), shape = RoundedCornerShape(50)) {
+                                Text(target.shortLabel, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            }
                         }
                         Spacer(Modifier.height(14.dp))
                         Text(if (progress.attemptsCount == 0) "Votre préparation\ncommence ici" else "Votre préparation\nen un coup d'œil", color = Color.White, style = MaterialTheme.typography.headlineMedium)
                         Text(if (progress.attemptsCount == 0) "Faites un premier test pour obtenir une estimation personnalisée." else "${progress.attemptsCount} test(s) analysé(s) pour votre objectif.", color = Color.White.copy(alpha = 0.78f), modifier = Modifier.padding(top = 8.dp), style = MaterialTheme.typography.bodyMedium)
                     }
-                    ProgressRing(progress = progress.readinessScore, label = if (progress.readinessStatus == ReadinessStatus.INSUFFICIENT) "—" else "${(progress.readinessScore * 100).roundToInt()}%", trackColor = Color.White.copy(alpha = 0.2f), progressColor = CivicGold)
+                    ProgressRing(progress = progress.readinessScore, label = if (progress.readinessStatus == ReadinessStatus.INSUFFICIENT) "—" else "${(progress.readinessScore * 100).roundToInt()}%", trackColor = Color.White.copy(alpha = 0.2f), progressColor = accent)
                 }
                 Spacer(Modifier.height(18.dp))
                 Button(
@@ -708,6 +732,7 @@ private fun LearningDetailScreen(theme: CivicThemeId, onBack: () -> Unit, onStar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ExamIntroScreen(target: ExamTarget, onBack: () -> Unit, onStart: () -> Unit) {
+    val accent = targetAccent(target)
     Scaffold(
         topBar = {
             TopAppBar(
@@ -722,19 +747,19 @@ private fun ExamIntroScreen(target: ExamTarget, onBack: () -> Unit, onStart: () 
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(
-                modifier = Modifier.size(112.dp).clip(CircleShape).background(Brush.linearGradient(listOf(CivicBlue, CivicNavy))),
+                modifier = Modifier.size(112.dp).clip(CircleShape).background(Brush.linearGradient(listOf(accent, CivicNavy))),
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Default.EmojiEvents, contentDescription = null, tint = CivicGold, modifier = Modifier.size(58.dp)) }
             Text("Dans les conditions de l'examen", style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 20.dp))
             Text("Un entraînement chronométré pour mesurer vos acquis sur les cinq thèmes.", color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp))
             Surface(
                 shape = RoundedCornerShape(50),
-                color = MaterialTheme.colorScheme.primaryContainer,
+                color = accent.copy(alpha = 0.20f),
                 modifier = Modifier.padding(top = 16.dp),
             ) {
                 Row(Modifier.padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
-                    Text("Parcours : ${target.label}", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 7.dp))
+                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = accent, modifier = Modifier.size(18.dp))
+                    Text("Parcours : ${target.label}", color = accent, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 7.dp))
                 }
             }
             Spacer(Modifier.height(24.dp))
@@ -793,6 +818,7 @@ private fun QuizScreen(
 ) {
     val isMock = themeKey == "ALL"
     val theme = if (isMock) null else CivicThemeId.valueOf(themeKey)
+    val accent = targetAccent(target)
     var runId by rememberSaveable { mutableIntStateOf(0) }
     val questions by produceState<List<Question>>(initialValue = emptyList(), themeKey, target, runId) {
         val recentConcepts = repository.recentConceptIds()
@@ -870,10 +896,10 @@ private fun QuizScreen(
                         }
                         Spacer(Modifier.width(7.dp))
                     }
-                    Surface(shape = RoundedCornerShape(50), color = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.padding(end = 12.dp)) {
+                    Surface(shape = RoundedCornerShape(50), color = accent.copy(alpha = 0.20f), modifier = Modifier.padding(end = 12.dp)) {
                         Text(
                             if (questions.isEmpty()) "…" else "${currentIndex + 1}/${questions.size}",
-                            color = MaterialTheme.colorScheme.primary,
+                            color = accent,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(horizontal = 11.dp, vertical = 6.dp),
                         )
@@ -1263,4 +1289,10 @@ private fun themeAccent(theme: CivicThemeId): Color = when (theme) {
     CivicThemeId.RIGHTS -> CivicGreen
     CivicThemeId.HISTORY -> Color(0xFFD28524)
     CivicThemeId.SOCIETY -> CivicRed
+}
+
+private fun targetAccent(target: ExamTarget): Color = when (target) {
+    ExamTarget.NATURALISATION -> CivicBlue
+    ExamTarget.CARTE_RESIDENT -> CivicGreen
+    ExamTarget.CARTE_PLURIANNUELLE -> CivicGold
 }
