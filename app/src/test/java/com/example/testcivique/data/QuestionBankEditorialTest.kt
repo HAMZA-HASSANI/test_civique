@@ -16,8 +16,8 @@ class QuestionBankEditorialTest {
 
     @Test
     fun `all displayed questions are autonomous and well formed`() {
-        assertEquals(500, DemoContent.questions.size)
-        assertEquals(500, DemoContent.questions.map { it.text }.distinct().size)
+        assertEquals(600, DemoContent.questions.size)
+        assertEquals(600, DemoContent.questions.map { it.text }.distinct().size)
 
         DemoContent.questions.forEach { question ->
             val normalized = question.text.lowercase()

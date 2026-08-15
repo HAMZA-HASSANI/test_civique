@@ -1,6 +1,6 @@
 # Mon Civique
 
-Application Android moderne pour préparer le test civique français lié à la naturalisation et à la carte de résident.
+Application Android moderne pour préparer les trois mentions du test civique français : naturalisation, carte de résident et carte de séjour pluriannuelle.
 
 ## Fonctionnalités
 
@@ -8,10 +8,11 @@ Application Android moderne pour préparer le test civique français lié à la 
 - QCM thématique de 20 questions ;
 - examen blanc chronométré de 40 questions, avec un seuil de réussite de 32/40 ;
 - questions tirées aléatoirement et réponses mélangées ;
+- banques de questions adaptées à la mention sélectionnée, avec 100 formulations par thème et par parcours ;
 - historique local des tentatives, réponses et corrections ;
 - suppression d’une tentative ou de tout l’historique ;
 - estimation de la préparation globale et de la maîtrise de chaque thème ;
-- thème clair/sombre et interface Material 3.
+- mode sombre permanent, code couleur par parcours et interface Material 3.
 
 Les cinq thèmes sont : principes et valeurs de la République, système institutionnel et politique, droits et devoirs, histoire-géographie-culture, et vivre dans la société française.
 
@@ -31,7 +32,7 @@ Le projet utilise actuellement le JDK 21 pour Gradle. Sur cette machine, le chem
 ./gradlew.bat assembleDebug
 ```
 
-Les documents sources utilisés pour préparer la banque sont conservés dans le dossier `ressources/`.
+La banque s'appuie sur le référentiel de l'arrêté du 10 octobre 2025 et sur les listes de questions de connaissance publiées par le ministère de l'Intérieur pour les mentions CSP, carte de résident et naturalisation.
 
 ## APK de test
 

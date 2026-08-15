@@ -183,7 +183,11 @@ object DemoContent {
     val questions: List<Question> = canonicalQuestions.flatMap { question ->
         (listOf(question.text) + NaturalQuestionVariants.forQuestion(question.id))
             .mapIndexed { index, text ->
-                question.copy(id = "${question.id}_v${index + 1}", text = text)
+                question.copy(
+                    id = "${question.id}_v${index + 1}",
+                    text = text,
+                    targets = QuestionTargetCatalog.targetsFor(question.id),
+                )
             }
     }
 

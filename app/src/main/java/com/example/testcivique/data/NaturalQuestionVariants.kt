@@ -124,6 +124,31 @@ internal object NaturalQuestionVariants {
             "Peut-on décider seul de ne pas déclarer ses revenus lorsqu’on estime ne pas bénéficier des services publics ?",
         ),
 
+        "p21" to listOf(
+            "Quelle figure féminine incarne symboliquement la République française ?",
+            "Quel personnage coiffé d'un bonnet phrygien représente la République ?",
+            "Comment s'appelle la figure qui personnifie la République française ?",
+            "Quelle représentation symbolique de la République trouve-t-on dans de nombreuses mairies ?",
+        ),
+        "p22" to listOf(
+            "L'outrage public au drapeau français est-il toujours autorisé ?",
+            "Que prévoit la loi lorsqu'un drapeau tricolore est publiquement outragé pendant un événement officiel ?",
+            "Brûler un drapeau français lors d'une manifestation réglementée peut-il être sanctionné ?",
+            "La liberté d'expression autorise-t-elle sans limite l'outrage public au drapeau tricolore ?",
+        ),
+        "p23" to listOf(
+            "De quelle année date la création de la Sécurité sociale française ?",
+            "Quand la Sécurité sociale a-t-elle été mise en place en France ?",
+            "Quelle année marque la naissance de la Sécurité sociale en France ?",
+            "À quelle date historique la création de la Sécurité sociale est-elle associée ?",
+        ),
+        "p24" to listOf(
+            "Sur quels édifices peut-on fréquemment lire la devise républicaine ?",
+            "Dans quel type de lieu la devise « Liberté, Égalité, Fraternité » est-elle souvent inscrite ?",
+            "Où la devise de la République est-elle couramment affichée ?",
+            "Sur quelle catégorie de bâtiments trouve-t-on notamment la devise française ?",
+        ),
+
         "i1" to listOf(
             "Combien d’années dure le mandat présidentiel en France ?",
             "Pour quelle durée le président de la République est-il élu ?",
@@ -243,6 +268,31 @@ internal object NaturalQuestionVariants {
             "Où la Banque centrale européenne est-elle installée ?",
             "Quelle ville allemande accueille la Banque centrale européenne ?",
             "À quelle ville est associé le siège de la Banque centrale européenne ?",
+        ),
+
+        "i21" to listOf(
+            "Quels représentants les citoyens choisissent-ils aux élections municipales ?",
+            "Pour qui vote-t-on directement lors d'une élection municipale ?",
+            "Quelles personnes sont désignées par le scrutin municipal ?",
+            "Lors des élections municipales, quels élus composant la commune sont choisis ?",
+        ),
+        "i22" to listOf(
+            "Quel principe impose aux gouvernants de respecter eux aussi les lois ?",
+            "Comment appelle-t-on un État dans lequel la puissance publique est soumise au droit ?",
+            "Dans quel type d'État les citoyens et les autorités doivent-ils tous respecter le droit ?",
+            "Quelle définition correspond à un État de droit ?",
+        ),
+        "i23" to listOf(
+            "Pour combien d'années les députés sont-ils normalement élus ?",
+            "Combien de temps dure en principe le mandat d'un député ?",
+            "À quelle durée correspond le mandat législatif des députés ?",
+            "Quelle est la durée normale d'une législature de l'Assemblée nationale ?",
+        ),
+        "i24" to listOf(
+            "Quelle autorité est chargée de diriger l'action du Gouvernement ?",
+            "Qui coordonne et conduit l'action gouvernementale ?",
+            "À qui la Constitution confie-t-elle la direction de l'action du Gouvernement ?",
+            "Quel responsable politique dirige le travail du Gouvernement ?",
         ),
 
         "d1" to listOf(
@@ -366,6 +416,31 @@ internal object NaturalQuestionVariants {
             "Demander l’assistance d’un avocat pendant une garde à vue est-il autorisé ?",
         ),
 
+        "d21" to listOf(
+            "Quel droit garantit à une personne la possibilité de présenter sa défense devant un tribunal ?",
+            "Comment une personne peut-elle être juridiquement assistée pour se défendre en justice ?",
+            "Quel principe protège la capacité d'un justiciable à répondre aux accusations ?",
+            "À quel droit se rattache l'assistance d'un avocat pendant une procédure judiciaire ?",
+        ),
+        "d22" to listOf(
+            "Dans quel objectif légal peut-on restreindre la liberté d'expression ?",
+            "Quelle raison peut légalement justifier une limite à la liberté d'expression ?",
+            "Pourquoi la loi peut-elle encadrer certains propos publics ?",
+            "La protection de quel intérêt peut justifier une restriction de la liberté d'expression ?",
+        ),
+        "d23" to listOf(
+            "Qui peut demander une carte nationale d'identité française ?",
+            "Quelle qualité juridique faut-il posséder pour recevoir une carte d'identité française ?",
+            "L'obtention d'une carte nationale d'identité suppose de remplir quelle condition ?",
+            "À quelles personnes la carte nationale d'identité française est-elle délivrée ?",
+        ),
+        "d24" to listOf(
+            "Qu'est-ce qu'un comportement citoyen dans l'espace numérique ?",
+            "Comment une personne exerce-t-elle ses droits et devoirs de citoyen sur internet ?",
+            "Quelle pratique correspond à la citoyenneté numérique ?",
+            "Quel usage du numérique respecte les principes de la citoyenneté ?",
+        ),
+
         "h1" to listOf(
             "Quelle année marque le début de la Révolution française ?",
             "Quand la Révolution française a-t-elle commencé ?",
@@ -487,6 +562,31 @@ internal object NaturalQuestionVariants {
             "Quel château français représente particulièrement le pouvoir de Louis XIV ?",
         ),
 
+        "h21" to listOf(
+            "Quel océan longe la façade occidentale de la France métropolitaine ?",
+            "Parmi ces étendues d'eau, laquelle borde le territoire métropolitain français ?",
+            "Quelle étendue maritime se situe à l'ouest de la France métropolitaine ?",
+            "Vers quel océan s'ouvre la côte ouest de la France métropolitaine ?",
+        ),
+        "h22" to listOf(
+            "Quel espace maritime se trouve entre les côtes françaises et anglaises ?",
+            "Comment s'appelle la mer qui sépare la France du Royaume-Uni ?",
+            "Quelle mer les ferries traversent-ils entre Calais et Douvres ?",
+            "Entre la France métropolitaine et l'Angleterre se trouve quelle mer ?",
+        ),
+        "h23" to listOf(
+            "Quel officier français est l'auteur de La Marseillaise ?",
+            "À qui doit-on la composition de l'hymne national français ?",
+            "Qui a écrit et composé le Chant de guerre devenu La Marseillaise ?",
+            "Quel auteur est associé à la création de La Marseillaise en 1792 ?",
+        ),
+        "h24" to listOf(
+            "Quelle ville fut le premier port négrier français au XVIIIe siècle ?",
+            "Quel port occupait la place principale dans la traite négrière française au XVIIIe siècle ?",
+            "À quelle ville portuaire l'histoire de la traite négrière française est-elle particulièrement liée ?",
+            "Quel grand port de l'Atlantique fut au centre de la traite négrière française ?",
+        ),
+
         "s1" to listOf(
             "Quel numéro faut-il composer pour joindre la police ou la gendarmerie en urgence ?",
             "Comment contacter les forces de l’ordre en situation urgente ?",
@@ -606,6 +706,30 @@ internal object NaturalQuestionVariants {
             "Peut-on légalement travailler sans que l’emploi soit déclaré ?",
             "Comment la loi considère-t-elle une activité professionnelle non déclarée ?",
             "Un employeur et un salarié peuvent-ils convenir de ne pas déclarer l’emploi ?",
+        ),
+        "s21" to listOf(
+            "Quel est le rôle d'une mutuelle dans le remboursement des dépenses de santé ?",
+            "Que peut prendre en charge une complémentaire santé après l'Assurance maladie ?",
+            "Pourquoi peut-on souscrire une complémentaire santé ?",
+            "Comment une mutuelle intervient-elle dans le paiement des soins ?",
+        ),
+        "s22" to listOf(
+            "Quel dispositif aide à payer les frais de justice et d'avocat sous condition de ressources ?",
+            "Comment s'appelle l'aide destinée aux personnes ayant peu de ressources pour accéder à un avocat ?",
+            "Quelle aide financière facilite l'accès à la justice ?",
+            "Quel mécanisme peut couvrir les honoraires d'un avocat pour une personne aux ressources modestes ?",
+        ),
+        "s23" to listOf(
+            "Quelle forme de mariage est reconnue par le droit français ?",
+            "Quelle cérémonie doit avoir lieu pour qu'un mariage ait des effets juridiques en France ?",
+            "Quel mariage est officiellement reconnu par l'État français ?",
+            "Devant quelle autorité un mariage doit-il être célébré pour être juridiquement valable ?",
+        ),
+        "s24" to listOf(
+            "Quel dispositif évite au patient d'avancer certains frais médicaux ?",
+            "Que permet le mécanisme du tiers payant chez un professionnel de santé ?",
+            "Comment s'appelle le système permettant de ne pas payer immédiatement la part prise en charge des soins ?",
+            "À quoi sert le tiers payant lors d'une consultation médicale ?",
         ),
     )
 
