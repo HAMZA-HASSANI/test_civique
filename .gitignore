@@ -25,3 +25,5 @@ captures/
 # Generated APKs and bundles
 *.apk
 *.aab
+!artifacts/
+!artifacts/*.apk

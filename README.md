@@ -32,3 +32,7 @@ Le projet utilise actuellement le JDK 21 pour Gradle. Sur cette machine, le chem
 ```
 
 Les documents sources utilisés pour préparer la banque sont conservés dans le dossier `ressources/`.
+
+## APK de test
+
+La dernière APK debug installable est disponible dans [`artifacts/mon-civique-debug.apk`](artifacts/mon-civique-debug.apk). Elle est destinée aux tests Android et n’est pas signée pour une publication Play Store.
