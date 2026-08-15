@@ -31,6 +31,29 @@ interface AttemptDao {
     @Query("DELETE FROM attempts")
     suspend fun deleteAllAttempts()
 
+    @Query("DELETE FROM attempts WHERE target = :target")
+    suspend fun deleteAttemptsForTarget(target: String)
+
     @Query("SELECT conceptId FROM attempt_answers ORDER BY id DESC LIMIT :limit")
     suspend fun recentConceptIds(limit: Int): List<String>
+
+    @Query(
+        """
+        SELECT answers.conceptId FROM attempt_answers AS answers
+        INNER JOIN attempts ON attempts.id = answers.attemptId
+        WHERE attempts.target = :target
+        ORDER BY answers.id DESC
+        LIMIT :limit
+        """,
+    )
+    suspend fun recentConceptIdsForTarget(target: String, limit: Int): List<String>
+
+    @Query("SELECT * FROM learning_progress WHERE target = :target ORDER BY completedAt DESC")
+    fun observeLearningProgress(target: String): Flow<List<LearningProgressEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun completeChapter(progress: LearningProgressEntity)
+
+    @Query("DELETE FROM learning_progress WHERE target = :target AND theme = :theme AND chapterIndex = :chapterIndex")
+    suspend fun reopenChapter(target: String, theme: String, chapterIndex: Int)
 }

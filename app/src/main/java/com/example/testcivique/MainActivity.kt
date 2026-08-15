@@ -13,7 +13,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             CivicTheme(darkTheme = true) {
-                CivicTestApp(darkTheme = true, onToggleTheme = {})
+                CivicTestApp()
             }
         }
     }

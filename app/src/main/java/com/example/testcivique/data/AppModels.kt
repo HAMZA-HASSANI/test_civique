@@ -57,7 +57,7 @@ data class Question(
     val targets: Set<ExamTarget> = ExamTarget.entries.toSet(),
     val sourceTitle: String = "Livret du citoyen 2026 — Ministère de l'Intérieur",
     val sourceUrl: String = "https://www.immigration.interieur.gouv.fr/documentation/guides-textes-et-brochures/livret-du-citoyen.html",
-)
+) : java.io.Serializable
 
 enum class QuestionType {
     KNOWLEDGE,
@@ -67,6 +67,7 @@ enum class QuestionType {
 data class LearningChapter(
     val title: String,
     val durationMinutes: Int,
+    val keyPoints: List<String>,
     val completed: Boolean = false,
 )
 
@@ -88,9 +89,9 @@ object DemoContent {
                 "La liberté d'expression existe dans les limites fixées par la loi.",
             ),
             listOf(
-                LearningChapter("La devise et les symboles", 7, true),
-                LearningChapter("Libertés et égalité", 9),
-                LearningChapter("Comprendre la laïcité", 8),
+                LearningChapter("La devise et les symboles", 7, listOf("La devise officielle est « Liberté, Égalité, Fraternité ».", "Le drapeau bleu, blanc, rouge et La Marseillaise sont des symboles officiels.", "Marianne, le 14 juillet et le coq sont aussi des repères républicains.")),
+                LearningChapter("Libertés et égalité", 9, listOf("Les libertés s'exercent dans le respect de la loi et des droits d'autrui.", "L'égalité interdit notamment les discriminations fondées sur l'origine, le sexe ou le handicap.", "La fraternité se traduit par la solidarité entre les personnes et les générations.")),
+                LearningChapter("Comprendre la laïcité", 8, listOf("La laïcité garantit la liberté de croire, de ne pas croire et de changer de conviction.", "L'État et les agents publics sont neutres à l'égard des religions.", "Les usagers peuvent exprimer leurs convictions dans les limites de l'ordre public et du fonctionnement du service.")),
             ),
         ),
         ThemeLearningContent(
@@ -102,9 +103,9 @@ object DemoContent {
                 "Le préfet représente l'État dans le département.",
             ),
             listOf(
-                LearningChapter("Le droit de vote", 8),
-                LearningChapter("Les pouvoirs de la République", 11),
-                LearningChapter("La France dans l'Union européenne", 9),
+                LearningChapter("Le droit de vote", 8, listOf("Le droit de vote s'exerce à partir de 18 ans pour les citoyens remplissant les conditions légales.", "Le président et les députés sont élus au suffrage universel direct.", "Les conseillers municipaux sont élus par les électeurs puis élisent le maire.")),
+                LearningChapter("Les pouvoirs de la République", 11, listOf("Le pouvoir exécutif est exercé par le président de la République et le Gouvernement.", "Le Parlement, composé de l'Assemblée nationale et du Sénat, vote les lois.", "L'autorité judiciaire est indépendante et veille au respect du droit.")),
+                LearningChapter("La France dans l'Union européenne", 9, listOf("L'Union européenne compte 27 États membres.", "Le Parlement européen siège officiellement à Strasbourg et la Commission européenne à Bruxelles.", "La citoyenneté européenne complète la citoyenneté nationale des ressortissants de l'Union.")),
             ),
         ),
         ThemeLearningContent(
@@ -116,9 +117,9 @@ object DemoContent {
                 "Porter secours à une personne en danger est une obligation.",
             ),
             listOf(
-                LearningChapter("Les droits fondamentaux", 10),
-                LearningChapter("Les devoirs du citoyen", 9),
-                LearningChapter("Agir de façon responsable", 7),
+                LearningChapter("Les droits fondamentaux", 10, listOf("La dignité, la sûreté et les libertés d'expression, de conscience et de circulation sont protégées.", "La Déclaration des droits de l'homme et du citoyen date de 1789.", "Les droits de la défense permettent notamment d'être assisté par un avocat.")),
+                LearningChapter("Les devoirs du citoyen", 9, listOf("Toute personne présente en France doit respecter la loi.", "Déclarer ses revenus et contribuer aux charges publiques sont des obligations légales.", "Un citoyen convoqué comme juré d'assises doit en principe se présenter.")),
+                LearningChapter("Agir de façon responsable", 7, listOf("Il faut alerter les secours lorsqu'une personne est en danger sans se mettre soi-même gravement en danger.", "Les violences, discriminations et incitations à la haine peuvent être sanctionnées.", "Le respect de l'environnement et des règles communes participe à la responsabilité civique.")),
             ),
         ),
         ThemeLearningContent(
@@ -130,9 +131,9 @@ object DemoContent {
                 "La France possède des territoires en Europe et outre-mer.",
             ),
             listOf(
-                LearningChapter("Les grandes périodes historiques", 12),
-                LearningChapter("Territoires et géographie", 10),
-                LearningChapter("Culture et patrimoine", 9),
+                LearningChapter("Les grandes périodes historiques", 12, listOf("1789 marque le début de la Révolution française et 1804 l'Empire de Napoléon Ier.", "Les deux guerres mondiales se déroulent de 1914 à 1918 et de 1939 à 1945.", "La Ve République est fondée en 1958 et la peine de mort est abolie en 1981.")),
+                LearningChapter("Territoires et géographie", 10, listOf("La France métropolitaine compte 13 régions.", "La France possède des territoires ultramarins dans plusieurs océans.", "Le mont Blanc est le plus haut sommet de France et la Seine traverse Paris.")),
+                LearningChapter("Culture et patrimoine", 9, listOf("La Joconde est exposée au musée du Louvre.", "Molière, Victor Hugo, Marie Curie et de nombreux artistes participent au patrimoine français.", "Le château de Versailles est particulièrement associé au règne de Louis XIV.")),
             ),
         ),
         ThemeLearningContent(
@@ -144,9 +145,9 @@ object DemoContent {
                 "Le SMIC correspond au salaire minimum légal.",
             ),
             listOf(
-                LearningChapter("Se soigner et demander de l'aide", 8),
-                LearningChapter("Travailler en France", 10),
-                LearningChapter("Famille et système éducatif", 11),
+                LearningChapter("Se soigner et demander de l'aide", 8, listOf("Le 15 joint le SAMU, le 17 la police, le 18 les pompiers et le 112 les urgences européennes.", "La carte Vitale facilite la prise en charge par l'Assurance maladie.", "Une complémentaire santé peut rembourser une partie des frais restant à charge.")),
+                LearningChapter("Travailler en France", 10, listOf("La durée légale du travail à temps complet est de 35 heures par semaine.", "Le SMIC fixe un salaire minimum légal.", "Le travail dissimulé est interdit et le conseil de prud'hommes traite les litiges individuels du travail.")),
+                LearningChapter("Famille et système éducatif", 11, listOf("L'instruction est obligatoire de 3 à 16 ans.", "Après l'école élémentaire, les élèves vont généralement au collège.", "L'autorité parentale s'exerce dans l'intérêt de l'enfant et sans violences physiques ou psychologiques.")),
             ),
         ),
     )
@@ -181,12 +182,15 @@ object DemoContent {
     val canonicalQuestions: List<Question> = initialQuestions + AdditionalQuestions.items
 
     val questions: List<Question> = canonicalQuestions.flatMap { question ->
+        val source = QuestionTargetCatalog.sourceFor(question.id)
         (listOf(question.text) + NaturalQuestionVariants.forQuestion(question.id))
             .mapIndexed { index, text ->
                 question.copy(
                     id = "${question.id}_v${index + 1}",
                     text = text,
                     targets = QuestionTargetCatalog.targetsFor(question.id),
+                    sourceTitle = source.title,
+                    sourceUrl = source.url,
                 )
             }
     }

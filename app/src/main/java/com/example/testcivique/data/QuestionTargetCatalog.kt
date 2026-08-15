@@ -8,6 +8,7 @@ package com.example.testcivique.data
  * pour la CSP, la carte de résident et la naturalisation.
  */
 internal object QuestionTargetCatalog {
+    data class OfficialSource(val title: String, val url: String)
     private val csp = setOf(ExamTarget.CARTE_PLURIANNUELLE)
     private val resident = setOf(ExamTarget.CARTE_RESIDENT)
     private val naturalisation = setOf(ExamTarget.NATURALISATION)
@@ -47,4 +48,23 @@ internal object QuestionTargetCatalog {
 
     fun targetsFor(conceptId: String): Set<ExamTarget> =
         assignments[conceptId] ?: ExamTarget.entries.toSet()
+
+    fun sourceFor(conceptId: String): OfficialSource = when (targetsFor(conceptId).singleOrNull()) {
+        ExamTarget.CARTE_PLURIANNUELLE -> OfficialSource(
+            "Liste officielle des questions — Carte de séjour pluriannuelle",
+            "https://formation-civique.interieur.gouv.fr/examen-civique/liste-officielle-des-questions-de-connaissance-csp/",
+        )
+        ExamTarget.CARTE_RESIDENT -> OfficialSource(
+            "Liste officielle des questions — Carte de résident",
+            "https://formation-civique.interieur.gouv.fr/examen-civique/liste-officielle-des-questions-de-connaissance-cr/",
+        )
+        ExamTarget.NATURALISATION -> OfficialSource(
+            "Liste officielle des questions — Naturalisation",
+            "https://www.immigration.interieur.gouv.fr/documentation/guides-textes-et-brochures/questions-de-connaissance-pour-lexamen-civique-nationalite-francaise.html",
+        )
+        null -> OfficialSource(
+            "Référentiel officiel de l'examen civique — Arrêté du 10 octobre 2025",
+            "https://www.legifrance.gouv.fr/loda/id/JORFTEXT000052381620",
+        )
+    }
 }

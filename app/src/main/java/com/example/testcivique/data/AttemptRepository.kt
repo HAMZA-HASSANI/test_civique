@@ -5,6 +5,7 @@ import com.example.testcivique.data.local.AttemptAnswerEntity
 import com.example.testcivique.data.local.AttemptEntity
 import com.example.testcivique.data.local.AttemptWithAnswers
 import com.example.testcivique.data.local.CivicDatabase
+import com.example.testcivique.data.local.LearningProgressEntity
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -33,6 +34,7 @@ data class ProgressSnapshot(
     val mockAttemptsCount: Int,
     val bestMockScore: Int?,
     val readinessScore: Float,
+    val readinessConfidence: Float,
     val readinessStatus: ReadinessStatus,
     val themes: List<ThemeMastery>,
 )
@@ -49,49 +51,11 @@ class AttemptRepository(private val database: CivicDatabase) {
             val attempts = allAttempts.filter { it.target == target.name }
             val attemptIds = attempts.mapTo(mutableSetOf()) { it.id }
             val answers = allAnswers.filter { it.attemptId in attemptIds }
-            val mockAttempts = attempts.filter { it.mode == AttemptMode.MOCK.name }
-            val recentMocks = mockAttempts.take(5)
-            val mockAverage = if (recentMocks.isEmpty()) 0f else recentMocks.map { it.score.toFloat() / it.total }.average().toFloat()
-            val themes = CivicThemeId.entries.map { theme ->
-                val themeAnswers = answers.filter { it.theme == theme.name }.take(100)
-                val correct = themeAnswers.count { it.isCorrect }
-                val total = themeAnswers.size
-                val percentage = if (total == 0) 0f else correct.toFloat() / total
-                ThemeMastery(
-                    theme = theme,
-                    correct = correct,
-                    total = total,
-                    percentage = percentage,
-                    status = when {
-                        total < 40 -> MasteryStatus.INSUFFICIENT
-                        percentage >= 0.8f -> MasteryStatus.MASTERED
-                        percentage >= 0.7f -> MasteryStatus.CONSOLIDATING
-                        else -> MasteryStatus.TO_REVIEW
-                    },
-                )
-            }
-            val themeAverage = themes.map { it.percentage }.average().toFloat()
-            val readiness = mockAverage * 0.65f + themeAverage * 0.35f
-            val sufficient = mockAttempts.size >= 3 && themes.all { it.total >= 40 }
-            val latestMocks = mockAttempts.take(4)
-            val isReady = sufficient && readiness >= 0.82f && latestMocks.firstOrNull()?.passed == true &&
-                latestMocks.count { it.passed } >= 3 && themes.all { it.percentage >= 0.75f }
-            ProgressSnapshot(
-                attemptsCount = attempts.size,
-                mockAttemptsCount = mockAttempts.size,
-                bestMockScore = mockAttempts.maxOfOrNull { it.score },
-                readinessScore = readiness,
-                readinessStatus = when {
-                    !sufficient -> ReadinessStatus.INSUFFICIENT
-                    isReady -> ReadinessStatus.READY
-                    readiness >= 0.75f -> ReadinessStatus.ALMOST_READY
-                    else -> ReadinessStatus.NOT_READY
-                },
-                themes = themes,
-            )
+            ReadinessCalculator.calculate(attempts, answers)
         }
 
     suspend fun saveAttempt(
+        id: String = UUID.randomUUID().toString(),
         mode: AttemptMode,
         target: ExamTarget,
         theme: CivicThemeId?,
@@ -99,7 +63,6 @@ class AttemptRepository(private val database: CivicDatabase) {
         durationSeconds: Int,
         answers: List<AnswerSnapshot>,
     ): String {
-        val id = UUID.randomUUID().toString()
         val score = answers.count { it.selectedIndex == it.question.correctIndex }
         val total = answers.size
         val passScore = if (mode == AttemptMode.MOCK) QuestionGenerator.MOCK_PASS_SCORE else 16
@@ -144,6 +107,18 @@ class AttemptRepository(private val database: CivicDatabase) {
     }
 
     suspend fun recentConceptIds(limit: Int = 80): Set<String> = dao.recentConceptIds(limit).toSet()
+    suspend fun recentConceptIds(target: ExamTarget, limit: Int = 80): Set<String> =
+        dao.recentConceptIdsForTarget(target.name, limit).toSet()
+    fun observeLearningProgress(target: ExamTarget): Flow<List<LearningProgressEntity>> =
+        dao.observeLearningProgress(target.name)
+    suspend fun setChapterCompleted(target: ExamTarget, theme: CivicThemeId, chapterIndex: Int, completed: Boolean) {
+        if (completed) {
+            dao.completeChapter(LearningProgressEntity(target.name, theme.name, chapterIndex, System.currentTimeMillis()))
+        } else {
+            dao.reopenChapter(target.name, theme.name, chapterIndex)
+        }
+    }
     suspend fun deleteAttempt(id: String) = dao.deleteAttempt(id)
     suspend fun deleteAll() = dao.deleteAllAttempts()
+    suspend fun deleteForTarget(target: ExamTarget) = dao.deleteAttemptsForTarget(target.name)
 }

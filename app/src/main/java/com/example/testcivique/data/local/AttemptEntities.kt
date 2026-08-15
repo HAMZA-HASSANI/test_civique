@@ -19,7 +19,7 @@ data class AttemptEntity(
     val score: Int,
     val total: Int,
     val passed: Boolean,
-    val contentVersion: Int = 1,
+    val contentVersion: Int = 2,
 )
 
 @Entity(

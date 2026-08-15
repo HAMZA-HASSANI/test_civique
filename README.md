@@ -5,13 +5,17 @@ Application Android moderne pour préparer les trois mentions du test civique fr
 ## Fonctionnalités
 
 - apprentissage par thème ;
+- fiches d'apprentissage détaillées avec progression persistante par chapitre ;
 - QCM thématique de 20 questions ;
 - examen blanc chronométré de 40 questions, avec un seuil de réussite de 32/40 ;
+- reprise d'une série après une rotation ou une recréation de l'activité ;
+- navigation libre entre les questions, réponses facultatives et confirmation avant de terminer ;
 - questions tirées aléatoirement et réponses mélangées ;
 - banques de questions adaptées à la mention sélectionnée, avec 100 formulations par thème et par parcours ;
-- historique local des tentatives, réponses et corrections ;
-- suppression d’une tentative ou de tout l’historique ;
-- estimation de la préparation globale et de la maîtrise de chaque thème ;
+- historique local filtrable des tentatives, réponses et corrections ;
+- suppression d’une tentative ou de l’historique du parcours sélectionné ;
+- estimation de la préparation avec pondération des examens récents, couverture des notions et niveau de confiance ;
+- sources officielles accessibles depuis les corrections ;
 - mode sombre permanent, code couleur par parcours et interface Material 3.
 
 Les cinq thèmes sont : principes et valeurs de la République, système institutionnel et politique, droits et devoirs, histoire-géographie-culture, et vivre dans la société française.
@@ -30,9 +34,13 @@ Le projet utilise actuellement le JDK 21 pour Gradle. Sur cette machine, le chem
 ```powershell
 ./gradlew.bat testDebugUnitTest
 ./gradlew.bat assembleDebug
+./gradlew.bat lintDebug
+./gradlew.bat assembleRelease
 ```
 
 La banque s'appuie sur le référentiel de l'arrêté du 10 octobre 2025 et sur les listes de questions de connaissance publiées par le ministère de l'Intérieur pour les mentions CSP, carte de résident et naturalisation.
+
+Mon Civique est une application indépendante et n'est ni éditée ni approuvée par l'administration française. Les références officielles restent prioritaires.
 
 ## APK de test
 

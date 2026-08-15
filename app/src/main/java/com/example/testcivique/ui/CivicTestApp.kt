@@ -31,7 +31,12 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -48,7 +53,10 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Gavel
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Insights
@@ -113,17 +121,20 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.activity.compose.BackHandler
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.testcivique.data.AnswerSnapshot
 import com.example.testcivique.data.AttemptMode
 import com.example.testcivique.data.AttemptRepository
@@ -161,7 +172,7 @@ private enum class MainTab(val label: String, val icon: ImageVector) {
 }
 
 @Composable
-fun CivicTestApp(darkTheme: Boolean, onToggleTheme: () -> Unit) {
+fun CivicTestApp() {
     val navController = rememberNavController()
     val context = LocalContext.current
     val repository = remember { AttemptRepository(CivicDatabase.getInstance(context)) }
@@ -170,8 +181,6 @@ fun CivicTestApp(darkTheme: Boolean, onToggleTheme: () -> Unit) {
     NavHost(navController = navController, startDestination = "main") {
         composable("main") {
             MainShell(
-                darkTheme = darkTheme,
-                onToggleTheme = onToggleTheme,
                 repository = repository,
                 target = target,
                 onTargetChange = { target = it },
@@ -188,6 +197,8 @@ fun CivicTestApp(darkTheme: Boolean, onToggleTheme: () -> Unit) {
             val theme = CivicThemeId.valueOf(entry.arguments?.getString("theme") ?: CivicThemeId.PRINCIPLES.name)
             LearningDetailScreen(
                 theme = theme,
+                target = target,
+                repository = repository,
                 onBack = { navController.popBackStack() },
                 onStartQuiz = { navController.navigate("quiz/${theme.name}") },
             )
@@ -225,8 +236,6 @@ fun CivicTestApp(darkTheme: Boolean, onToggleTheme: () -> Unit) {
 
 @Composable
 private fun MainShell(
-    darkTheme: Boolean,
-    onToggleTheme: () -> Unit,
     repository: AttemptRepository,
     target: ExamTarget,
     onTargetChange: (ExamTarget) -> Unit,
@@ -285,7 +294,7 @@ private fun MainShell(
                     onOpenExam = onOpenExam,
                     progress = progress,
                 )
-                1 -> LearningScreen(onOpenTheme = onOpenLearning)
+                1 -> LearningScreen(repository = repository, target = target, onOpenTheme = onOpenLearning)
                 2 -> PracticeScreen(onStartQuiz = onStartQuiz, onOpenExam = onOpenExam)
                 3 -> HistoryScreen(repository = repository, target = target, onOpenAttempt = onOpenAttempt)
                 else -> ProgressScreen(progress = progress, onGoToPractice = { selectedTab = 2 })
@@ -328,6 +337,10 @@ private fun CivicTopBar(target: ExamTarget) {
 
 @Composable
 private fun TargetModeBar(target: ExamTarget, onTargetChange: (ExamTarget) -> Unit) {
+    val listState = rememberLazyListState()
+    LaunchedEffect(target) {
+        listState.animateScrollToItem(ExamTarget.entries.indexOf(target))
+    }
     Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 2.dp) {
         Column(Modifier.fillMaxWidth().padding(start = 20.dp, top = 4.dp, bottom = 8.dp)) {
             Text(
@@ -335,7 +348,12 @@ private fun TargetModeBar(target: ExamTarget, onTargetChange: (ExamTarget) -> Un
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 5.dp)) {
+            LazyRow(
+                state = listState,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(end = 20.dp),
+                modifier = Modifier.padding(top = 5.dp),
+            ) {
                 items(ExamTarget.entries) { option ->
                     val accent = targetAccent(option)
                     FilterChip(
@@ -397,6 +415,33 @@ private fun HomeScreen(
         }
         items(CivicThemeId.entries.take(3)) { theme ->
             CompactThemeCard(theme = theme, onClick = { onStartQuiz(theme) })
+        }
+        item { OfficialDisclaimerCard(target) }
+    }
+}
+
+@Composable
+private fun OfficialDisclaimerCard(target: ExamTarget) {
+    val uriHandler = LocalUriHandler.current
+    val accent = targetAccent(target)
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(20.dp),
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Verified, contentDescription = null, tint = accent)
+                Text("Sources et indépendance", fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 10.dp))
+            }
+            Text(
+                "Mon Civique est une application d'entraînement indépendante, sans affiliation avec l'administration française. Les modalités et listes publiques du ministère de l'Intérieur restent la référence.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 9.dp),
+            )
+            TextButton(onClick = { runCatching { uriHandler.openUri("https://formation-civique.interieur.gouv.fr/examen-civique/") } }) {
+                Text("Ouvrir le site officiel")
+            }
         }
     }
 }
@@ -470,7 +515,10 @@ private fun QuickActionCard(title: String, subtitle: String, icon: ImageVector, 
 }
 
 @Composable
-private fun LearningScreen(onOpenTheme: (CivicThemeId) -> Unit) {
+private fun LearningScreen(repository: AttemptRepository, target: ExamTarget, onOpenTheme: (CivicThemeId) -> Unit) {
+    val progress by repository.observeLearningProgress(target).collectAsStateWithLifecycle(initialValue = emptyList())
+    val completedKeys = progress.mapTo(mutableSetOf()) { it.theme to it.chapterIndex }
+    val completedCount = completedKeys.size
     LazyColumn(
         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -489,22 +537,25 @@ private fun LearningScreen(onOpenTheme: (CivicThemeId) -> Unit) {
                     Spacer(Modifier.width(14.dp))
                     Column {
                         Text("Votre parcours", fontWeight = FontWeight.Bold)
-                        Text("1 chapitre exploré sur 15", style = MaterialTheme.typography.bodyMedium)
-                        LinearProgressIndicator(progress = { 1f / 15f }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), strokeCap = StrokeCap.Round)
+                        Text("$completedCount chapitre${if (completedCount > 1) "s" else ""} terminé${if (completedCount > 1) "s" else ""} sur 15", style = MaterialTheme.typography.bodyMedium)
+                        LinearProgressIndicator(progress = { completedCount / 15f }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), strokeCap = StrokeCap.Round)
                     }
                 }
             }
         }
         items(CivicThemeId.entries) { theme ->
-            LearningThemeCard(theme = theme, onClick = { onOpenTheme(theme) })
+            LearningThemeCard(
+                theme = theme,
+                completed = completedKeys.count { it.first == theme.name },
+                onClick = { onOpenTheme(theme) },
+            )
         }
     }
 }
 
 @Composable
-private fun LearningThemeCard(theme: CivicThemeId, onClick: () -> Unit) {
+private fun LearningThemeCard(theme: CivicThemeId, completed: Int, onClick: () -> Unit) {
     val accent = themeAccent(theme)
-    val completed = if (theme == CivicThemeId.PRINCIPLES) 1 else 0
     Card(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -562,7 +613,7 @@ private fun ExamFeatureCard(onClick: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Surface(color = CivicGold, shape = RoundedCornerShape(50)) {
-                        Text("FORMAT OFFICIEL", color = CivicNavy, fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp))
+                        Text("FORMAT 40 QUESTIONS", color = CivicNavy, fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp))
                     }
                     Text("Examen blanc", color = Color.White, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(top = 12.dp))
                     Text("40 questions • 45 minutes • 32/40", color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.bodyMedium)
@@ -624,6 +675,12 @@ private fun ProgressScreen(progress: ProgressSnapshot, onGoToPractice: () -> Uni
                     Column(Modifier.weight(1f)) {
                         Text(readinessLabel(progress.readinessStatus), style = MaterialTheme.typography.titleLarge)
                         Text(readinessDescription(progress.readinessStatus), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 5.dp))
+                        Text(
+                            "Confiance de l'estimation : ${(progress.readinessConfidence * 100).roundToInt()} %",
+                            color = readinessColor(progress.readinessStatus),
+                            style = MaterialTheme.typography.labelLarge,
+                            modifier = Modifier.padding(top = 8.dp),
+                        )
                     }
                 }
             }
@@ -640,7 +697,7 @@ private fun ProgressScreen(progress: ProgressSnapshot, onGoToPractice: () -> Uni
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.weight(1f)) {
                     Text(mastery.theme.shortTitle, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                    Text(if (mastery.total == 0) "Aucune réponse" else "${mastery.correct}/${mastery.total} réponses correctes", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(if (mastery.total == 0) "Aucune notion évaluée" else "${mastery.correct}/${mastery.total} notions maîtrisées", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Surface(shape = RoundedCornerShape(50), color = color.copy(alpha = 0.13f)) {
                     Text(masteryLabel(mastery.status), style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = color)
@@ -670,9 +727,19 @@ private fun StatCard(value: String, label: String, icon: ImageVector, accent: Co
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun LearningDetailScreen(theme: CivicThemeId, onBack: () -> Unit, onStartQuiz: () -> Unit) {
+private fun LearningDetailScreen(
+    theme: CivicThemeId,
+    target: ExamTarget,
+    repository: AttemptRepository,
+    onBack: () -> Unit,
+    onStartQuiz: () -> Unit,
+) {
     val content = DemoContent.learningFor(theme)
     val accent = themeAccent(theme)
+    val progress by repository.observeLearningProgress(target).collectAsStateWithLifecycle(initialValue = emptyList())
+    val completedChapters = progress.filter { it.theme == theme.name }.mapTo(mutableSetOf()) { it.chapterIndex }
+    val scope = rememberCoroutineScope()
+    var expandedChapter by rememberSaveable(theme) { mutableIntStateOf(-1) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -713,15 +780,48 @@ private fun LearningDetailScreen(theme: CivicThemeId, onBack: () -> Unit, onStar
                 }
             }
             item { SectionHeader("Chapitres", "Avancez à votre rythme") }
-            items(content.chapters) { chapter ->
-                Surface(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(18.dp), tonalElevation = 1.dp) {
-                    Row(Modifier.fillMaxWidth().padding(15.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(if (chapter.completed) Icons.Default.CheckCircle else Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, tint = if (chapter.completed) CivicGreen else accent)
-                        Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                            Text(chapter.title, fontWeight = FontWeight.SemiBold)
-                            Text("${chapter.durationMinutes} min", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            itemsIndexed(content.chapters) { index, chapter ->
+                val completed = index in completedChapters
+                val expanded = expandedChapter == index
+                Surface(
+                    color = MaterialTheme.colorScheme.surface,
+                    shape = RoundedCornerShape(18.dp),
+                    tonalElevation = 1.dp,
+                    modifier = Modifier.fillMaxWidth().clickable { expandedChapter = if (expanded) -1 else index },
+                ) {
+                    Column(Modifier.padding(15.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(if (completed) Icons.Default.CheckCircle else Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, tint = if (completed) CivicGreen else accent)
+                            Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
+                                Text(chapter.title, fontWeight = FontWeight.SemiBold)
+                                Text("${chapter.durationMinutes} min", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Icon(if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore, contentDescription = if (expanded) "Réduire" else "Développer", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        AnimatedVisibility(visible = expanded) {
+                            Column(Modifier.padding(top = 14.dp)) {
+                                HorizontalDivider()
+                                chapter.keyPoints.forEach { point ->
+                                    Row(Modifier.padding(top = 12.dp), verticalAlignment = Alignment.Top) {
+                                        Text("•", color = accent, fontWeight = FontWeight.Bold)
+                                        Text(point, modifier = Modifier.padding(start = 9.dp), style = MaterialTheme.typography.bodyLarge)
+                                    }
+                                }
+                                Button(
+                                    onClick = {
+                                        scope.launch { repository.setChapterCompleted(target, theme, index, !completed) }
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (completed) MaterialTheme.colorScheme.surfaceVariant else accent,
+                                        contentColor = if (completed) MaterialTheme.colorScheme.onSurfaceVariant else Color.White,
+                                    ),
+                                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                                ) {
+                                    Icon(if (completed) Icons.Default.CheckCircle else Icons.Default.Check, contentDescription = null)
+                                    Text(if (completed) "Marquer à revoir" else "Marquer comme terminé", modifier = Modifier.padding(start = 8.dp))
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -750,7 +850,7 @@ private fun ExamIntroScreen(target: ExamTarget, onBack: () -> Unit, onStart: () 
                 modifier = Modifier.size(112.dp).clip(CircleShape).background(Brush.linearGradient(listOf(accent, CivicNavy))),
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Default.EmojiEvents, contentDescription = null, tint = CivicGold, modifier = Modifier.size(58.dp)) }
-            Text("Dans les conditions de l'examen", style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 20.dp))
+            Text("Entraînement au format de l'examen", style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 20.dp))
             Text("Un entraînement chronométré pour mesurer vos acquis sur les cinq thèmes.", color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp))
             Surface(
                 shape = RoundedCornerShape(50),
@@ -819,52 +919,63 @@ private fun QuizScreen(
     val isMock = themeKey == "ALL"
     val theme = if (isMock) null else CivicThemeId.valueOf(themeKey)
     val accent = targetAccent(target)
-    var runId by rememberSaveable { mutableIntStateOf(0) }
-    val questions by produceState<List<Question>>(initialValue = emptyList(), themeKey, target, runId) {
-        val recentConcepts = repository.recentConceptIds()
-        value = if (isMock) {
-            QuestionGenerator.mockExam(target = target, recentConceptIds = recentConcepts)
-        } else {
-            QuestionGenerator.thematicQuiz(theme = theme!!, target = target, recentConceptIds = recentConcepts)
-        }
-    }
-    var currentIndex by rememberSaveable(runId) { mutableIntStateOf(0) }
-    var selectedIndex by rememberSaveable(runId) { mutableIntStateOf(-1) }
-    var validated by rememberSaveable(runId) { mutableStateOf(false) }
-    var finished by rememberSaveable(runId) { mutableStateOf(false) }
-    val answers = remember(runId) { mutableStateMapOf<Int, Int>() }
-    var remainingSeconds by rememberSaveable(runId) { mutableIntStateOf(if (isMock) 45 * 60 else 0) }
-    val startedAt = remember(runId) { System.currentTimeMillis() }
-    var savedAttemptId by remember(runId) { mutableStateOf<String?>(null) }
+    val quizViewModel: QuizViewModel = viewModel(
+        key = "quiz-${target.name}-$themeKey",
+        factory = QuizViewModel.factory(repository, target, theme),
+    )
+    val state by quizViewModel.uiState.collectAsStateWithLifecycle()
+    var showExitConfirmation by rememberSaveable { mutableStateOf(false) }
+    var showFinishConfirmation by rememberSaveable { mutableStateOf(false) }
+    var showNavigator by rememberSaveable { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
-    val score = answers.count { (index, answer) -> questions.getOrNull(index)?.correctIndex == answer }
 
-    LaunchedEffect(isMock, runId, finished, questions.isNotEmpty()) {
-        if (isMock && !finished && questions.isNotEmpty()) {
-            while (remainingSeconds > 0 && !finished) {
-                delay(1_000)
-                remainingSeconds--
-            }
-            if (remainingSeconds <= 0 && !finished) {
-                if (selectedIndex >= 0) answers[currentIndex] = selectedIndex
-                finished = true
-            }
+    LaunchedEffect(state.finished) {
+        if (state.finished) {
+            showExitConfirmation = false
+            showFinishConfirmation = false
+            showNavigator = false
         }
     }
 
-    LaunchedEffect(finished, runId) {
-        if (finished && questions.isNotEmpty() && savedAttemptId == null) {
-            savedAttemptId = repository.saveAttempt(
-                mode = if (isMock) AttemptMode.MOCK else AttemptMode.THEMATIC,
-                target = target,
-                theme = theme,
-                startedAt = startedAt,
-                durationSeconds = ((System.currentTimeMillis() - startedAt) / 1_000).toInt(),
-                answers = questions.mapIndexed { index, question ->
-                    AnswerSnapshot(question, answers[index] ?: -1)
-                },
-            )
-        }
+    BackHandler(enabled = !state.finished) { showExitConfirmation = true }
+
+    if (showExitConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showExitConfirmation = false },
+            title = { Text("Quitter ce test ?") },
+            text = { Text("La série en cours ne sera pas ajoutée à l'historique et vos réponses seront perdues.") },
+            confirmButton = {
+                TextButton(onClick = { showExitConfirmation = false; onBack() }) {
+                    Text("Quitter", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = { TextButton(onClick = { showExitConfirmation = false }) { Text("Continuer") } },
+        )
+    }
+    if (showFinishConfirmation) {
+        val unanswered = state.questions.size - state.answeredCount
+        AlertDialog(
+            onDismissRequest = { showFinishConfirmation = false },
+            title = { Text("Terminer le test ?") },
+            text = {
+                Text(
+                    if (unanswered == 0) "Toutes les questions ont une réponse. Vous pourrez consulter la correction après validation."
+                    else "$unanswered question${if (unanswered > 1) "s" else ""} sans réponse compteront comme incorrectes.",
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showFinishConfirmation = false; quizViewModel.finish() }) { Text("Terminer") }
+            },
+            dismissButton = { TextButton(onClick = { showFinishConfirmation = false }) { Text("Revenir au test") } },
+        )
+    }
+    if (showNavigator && state.questions.isNotEmpty()) {
+        QuestionNavigatorDialog(
+            state = state,
+            accent = accent,
+            onSelect = { showNavigator = false; quizViewModel.goTo(it) },
+            onDismiss = { showNavigator = false },
+        )
     }
 
     Scaffold(
@@ -877,9 +988,14 @@ private fun QuizScreen(
                         overflow = TextOverflow.Ellipsis,
                     )
                 },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quitter") } },
+                navigationIcon = { IconButton(onClick = { if (state.finished) onBack() else showExitConfirmation = true }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quitter") } },
                 actions = {
-                    if (isMock && !finished) {
+                    if (!state.finished && state.questions.isNotEmpty()) {
+                        IconButton(onClick = { showNavigator = true }) {
+                            Icon(Icons.Default.GridView, contentDescription = "Toutes les questions", tint = accent)
+                        }
+                    }
+                    if (isMock && !state.finished) {
                         Surface(shape = RoundedCornerShape(50), color = CivicGold.copy(alpha = 0.16f)) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -887,7 +1003,7 @@ private fun QuizScreen(
                             ) {
                                 Icon(Icons.Default.Timer, contentDescription = null, tint = CivicGold, modifier = Modifier.size(17.dp))
                                 Text(
-                                    "%02d:%02d".format(remainingSeconds / 60, remainingSeconds % 60),
+                                    "%02d:%02d".format(state.remainingSeconds / 60, state.remainingSeconds % 60),
                                     color = CivicGold,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(start = 5.dp),
@@ -898,7 +1014,7 @@ private fun QuizScreen(
                     }
                     Surface(shape = RoundedCornerShape(50), color = accent.copy(alpha = 0.20f), modifier = Modifier.padding(end = 12.dp)) {
                         Text(
-                            if (questions.isEmpty()) "…" else "${currentIndex + 1}/${questions.size}",
+                            if (state.questions.isEmpty()) "…" else "${state.currentIndex + 1}/${state.questions.size}",
                             color = accent,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(horizontal = 11.dp, vertical = 6.dp),
@@ -909,37 +1025,31 @@ private fun QuizScreen(
             )
         },
     ) { padding ->
-        if (finished) {
+        if (state.finished) {
             ResultScreen(
-                score = score,
-                total = questions.size,
+                score = state.score,
+                total = state.questions.size,
                 isMock = isMock,
                 target = target,
-                saved = savedAttemptId != null,
-                reviews = questions.mapIndexed { index, question -> QuizReview(question, answers[index] ?: -1) },
+                saved = state.savedAttemptId != null,
+                reviews = state.questions.mapIndexed { index, question -> QuizReview(question, state.answers.getOrElse(index) { -1 }) },
                 onBack = onBack,
-                onRetry = {
-                    runId++
-                    currentIndex = 0
-                    selectedIndex = -1
-                    validated = false
-                    finished = false
-                },
+                onRetry = quizViewModel::retry,
                 modifier = Modifier.padding(padding),
             )
-        } else if (questions.isEmpty()) {
+        } else if (state.loading || state.questions.isEmpty()) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 Text("Préparation de votre série…", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         } else {
             Column(Modifier.fillMaxSize().padding(padding)) {
                 LinearProgressIndicator(
-                    progress = { (currentIndex + 1f) / questions.size },
+                    progress = { (state.currentIndex + 1f) / state.questions.size },
                     modifier = Modifier.fillMaxWidth().height(5.dp),
                     strokeCap = StrokeCap.Round,
                 )
                 AnimatedContent(
-                    targetState = currentIndex,
+                    targetState = state.currentIndex,
                     transitionSpec = {
                         (slideInHorizontally { it / 2 } + fadeIn()).togetherWith(slideOutHorizontally { -it / 3 } + fadeOut())
                     },
@@ -947,10 +1057,10 @@ private fun QuizScreen(
                     modifier = Modifier.weight(1f),
                 ) { index ->
                     QuestionContent(
-                        question = questions[index],
-                        selectedIndex = selectedIndex,
-                        validated = validated,
-                        onSelect = { if (!validated) selectedIndex = it },
+                        question = state.questions[index],
+                        selectedIndex = state.answers.getOrElse(index) { -1 },
+                        validated = index in state.validatedIndices,
+                        onSelect = quizViewModel::selectAnswer,
                     )
                 }
                 Surface(shadowElevation = 14.dp, color = MaterialTheme.colorScheme.surface) {
@@ -960,13 +1070,8 @@ private fun QuizScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         OutlinedButton(
-                            onClick = {
-                                if (selectedIndex >= 0) answers[currentIndex] = selectedIndex
-                                currentIndex--
-                                selectedIndex = answers[currentIndex] ?: -1
-                                validated = false
-                            },
-                            enabled = currentIndex > 0,
+                            onClick = quizViewModel::previous,
+                            enabled = state.currentIndex > 0,
                             modifier = Modifier.weight(0.38f).height(52.dp),
                             shape = RoundedCornerShape(16.dp),
                         ) {
@@ -975,49 +1080,41 @@ private fun QuizScreen(
                         }
                         Button(
                             onClick = {
-                                val question = questions[currentIndex]
                                 if (isMock) {
-                                    answers[currentIndex] = selectedIndex
-                                    if (selectedIndex == question.correctIndex) {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    }
-                                    if (currentIndex == questions.lastIndex) {
-                                        finished = true
+                                    if (state.currentIndex == state.questions.lastIndex) {
+                                        showFinishConfirmation = true
                                     } else {
-                                        currentIndex++
-                                        selectedIndex = answers[currentIndex] ?: -1
+                                        quizViewModel.next()
                                     }
-                                } else if (!validated) {
-                                    answers[currentIndex] = selectedIndex
-                                    validated = true
-                                    if (selectedIndex == question.correctIndex) {
+                                } else if (state.currentIndex !in state.validatedIndices) {
+                                    quizViewModel.validateCurrent()
+                                    if (state.selectedIndex == state.questions[state.currentIndex].correctIndex) {
                                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                     } else {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     }
-                                } else if (currentIndex == questions.lastIndex) {
-                                    finished = true
+                                } else if (state.currentIndex == state.questions.lastIndex) {
+                                    showFinishConfirmation = true
                                 } else {
-                                    currentIndex++
-                                    selectedIndex = answers[currentIndex] ?: -1
-                                    validated = false
+                                    quizViewModel.next()
                                 }
                             },
-                            enabled = selectedIndex >= 0,
+                            enabled = isMock || state.selectedIndex >= 0 || state.currentIndex in state.validatedIndices,
                             modifier = Modifier.weight(0.62f).height(52.dp),
                             shape = RoundedCornerShape(16.dp),
                         ) {
                             Text(
                                 when {
-                                    isMock && currentIndex == questions.lastIndex -> "Terminer l’examen"
+                                    isMock && state.currentIndex == state.questions.lastIndex -> "Terminer l’examen"
+                                    isMock && state.selectedIndex < 0 -> "Passer la question"
                                     isMock -> "Question suivante"
-                                    !validated -> "Valider ma réponse"
-                                    currentIndex == questions.lastIndex -> "Voir mon résultat"
+                                    state.currentIndex !in state.validatedIndices -> "Valider ma réponse"
+                                    state.currentIndex == state.questions.lastIndex -> "Voir mon résultat"
                                     else -> "Question suivante"
                                 },
                                 maxLines = 1,
                             )
-                            if (validated || isMock) {
+                            if (state.currentIndex in state.validatedIndices || isMock) {
                                 Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.padding(start = 8.dp))
                             }
                         }
@@ -1029,7 +1126,52 @@ private fun QuizScreen(
 }
 
 @Composable
+private fun QuestionNavigatorDialog(
+    state: QuizUiState,
+    accent: Color,
+    onSelect: (Int) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Questions") },
+        text = {
+            Column {
+                Text(
+                    "${state.answeredCount}/${state.questions.size} répondues",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(5),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth().height(330.dp).padding(top = 14.dp),
+                ) {
+                    items(state.questions.indices.toList()) { index ->
+                        val answered = state.answers.getOrElse(index) { -1 } >= 0
+                        val current = state.currentIndex == index
+                        Surface(
+                            color = if (answered) accent.copy(alpha = 0.22f) else MaterialTheme.colorScheme.surfaceVariant,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.aspectRatio(1f)
+                                .border(if (current) 2.dp else 1.dp, if (current) accent else MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
+                                .clickable { onSelect(index) },
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text("${index + 1}", color = if (answered || current) accent else MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Fermer") } },
+    )
+}
+
+@Composable
 private fun QuestionContent(question: Question, selectedIndex: Int, validated: Boolean, onSelect: (Int) -> Unit) {
+    val uriHandler = LocalUriHandler.current
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 18.dp),
     ) {
@@ -1067,6 +1209,9 @@ private fun QuestionContent(question: Question, selectedIndex: Int, validated: B
                     Column(Modifier.padding(start = 12.dp)) {
                         Text(if (success) "Bonne réponse !" else "À retenir", fontWeight = FontWeight.Bold, color = if (success) CivicGreen else CivicRed)
                         Text(question.explanation, modifier = Modifier.padding(top = 4.dp), style = MaterialTheme.typography.bodyMedium)
+                        TextButton(onClick = { runCatching { uriHandler.openUri(question.sourceUrl) } }) {
+                            Text("Consulter la source officielle", style = MaterialTheme.typography.labelMedium)
+                        }
                     }
                 }
             }
@@ -1199,6 +1344,7 @@ private fun ResultScreen(
 @Composable
 private fun QuizMistakeCard(review: QuizReview, modifier: Modifier = Modifier) {
     val question = review.question
+    val uriHandler = LocalUriHandler.current
     val selected = question.options.getOrNull(review.selectedIndex) ?: "Aucune réponse"
     val correct = question.options.getOrNull(question.correctIndex).orEmpty()
     Card(
@@ -1211,6 +1357,9 @@ private fun QuizMistakeCard(review: QuizReview, modifier: Modifier = Modifier) {
             Text("Votre réponse : $selected", color = CivicRed, modifier = Modifier.padding(top = 10.dp))
             Text("Bonne réponse : $correct", color = CivicGreen, modifier = Modifier.padding(top = 5.dp))
             Text(question.explanation, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 9.dp))
+            TextButton(onClick = { runCatching { uriHandler.openUri(question.sourceUrl) } }) {
+                Text("Source officielle", style = MaterialTheme.typography.labelMedium)
+            }
         }
     }
 }

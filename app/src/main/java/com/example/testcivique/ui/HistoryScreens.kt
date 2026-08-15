@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,6 +30,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,9 +46,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -77,7 +81,15 @@ internal fun HistoryScreen(
     onOpenAttempt: (String) -> Unit,
 ) {
     val allAttempts by repository.attempts.collectAsStateWithLifecycle(initialValue = emptyList())
-    val attempts = allAttempts.filter { it.target == target.name }
+    val targetAttempts = allAttempts.filter { it.target == target.name }
+    var filter by rememberSaveable { mutableStateOf(HistoryFilter.ALL) }
+    val attempts = targetAttempts.filter { attempt ->
+        when (filter) {
+            HistoryFilter.ALL -> true
+            HistoryFilter.MOCK -> attempt.mode == AttemptMode.MOCK.name
+            HistoryFilter.THEMATIC -> attempt.mode == AttemptMode.THEMATIC.name
+        }
+    }
     val scope = rememberCoroutineScope()
     var attemptToDelete by remember { mutableStateOf<AttemptEntity?>(null) }
     var confirmDeleteAll by remember { mutableStateOf(false) }
@@ -101,11 +113,11 @@ internal fun HistoryScreen(
         AlertDialog(
             onDismissRequest = { confirmDeleteAll = false },
             title = { Text("Vider l’historique ?") },
-            text = { Text("Tous les tests enregistrés, pour les deux parcours, seront supprimés.") },
+            text = { Text("Tous les tests enregistrés pour le parcours « ${target.label} » seront supprimés.") },
             confirmButton = {
                 TextButton(onClick = {
                     confirmDeleteAll = false
-                    scope.launch { repository.deleteAll() }
+                    scope.launch { repository.deleteForTarget(target) }
                 }) { Text("Tout supprimer", color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = { TextButton(onClick = { confirmDeleteAll = false }) { Text("Annuler") } },
@@ -126,8 +138,20 @@ internal fun HistoryScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                if (attempts.isNotEmpty()) {
+                if (targetAttempts.isNotEmpty()) {
                     TextButton(onClick = { confirmDeleteAll = true }) { Text("Tout effacer") }
+                }
+            }
+        }
+        item {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(HistoryFilter.entries.size) { index ->
+                    val option = HistoryFilter.entries[index]
+                    FilterChip(
+                        selected = filter == option,
+                        onClick = { filter = option },
+                        label = { Text(option.label) },
+                    )
                 }
             }
         }
@@ -144,6 +168,12 @@ internal fun HistoryScreen(
         }
         item { Spacer(Modifier.height(4.dp)) }
     }
+}
+
+private enum class HistoryFilter(val label: String) {
+    ALL("Tous"),
+    MOCK("Examens blancs"),
+    THEMATIC("QCM"),
 }
 
 @Composable
@@ -276,6 +306,7 @@ private fun AttemptSummary(attempt: AttemptEntity) {
 
 @Composable
 private fun AnswerReviewCard(answer: AttemptAnswerEntity) {
+    val uriHandler = LocalUriHandler.current
     val options = listOf(answer.optionA, answer.optionB, answer.optionC, answer.optionD)
     val selectedText = options.getOrNull(answer.selectedIndex) ?: "Aucune réponse"
     val correctText = options.getOrElse(answer.correctIndex) { "" }
@@ -300,7 +331,12 @@ private fun AnswerReviewCard(answer: AttemptAnswerEntity) {
             }
             Text(answer.explanation, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 10.dp))
             if (answer.sourceTitle.isNotBlank()) {
-                Text("Source : ${answer.sourceTitle}", style = MaterialTheme.typography.labelMedium, color = CivicBlue, modifier = Modifier.padding(top = 9.dp))
+                TextButton(
+                    onClick = { runCatching { uriHandler.openUri(answer.sourceUrl) } },
+                    modifier = Modifier.padding(top = 4.dp),
+                ) {
+                    Text("Source officielle : ${answer.sourceTitle}", style = MaterialTheme.typography.labelMedium, color = CivicBlue)
+                }
             }
         }
     }
@@ -311,6 +347,7 @@ internal fun emptyProgressSnapshot() = ProgressSnapshot(
     mockAttemptsCount = 0,
     bestMockScore = null,
     readinessScore = 0f,
+    readinessConfidence = 0f,
     readinessStatus = ReadinessStatus.INSUFFICIENT,
     themes = CivicThemeId.entries.map { ThemeMastery(it, 0, 0, 0f, MasteryStatus.INSUFFICIENT) },
 )
@@ -323,10 +360,10 @@ internal fun readinessLabel(status: ReadinessStatus) = when (status) {
 }
 
 internal fun readinessDescription(status: ReadinessStatus) = when (status) {
-    ReadinessStatus.INSUFFICIENT -> "Faites au moins 3 examens blancs et répondez à 40 questions par thème pour obtenir une estimation fiable."
+    ReadinessStatus.INSUFFICIENT -> "Faites au moins 3 examens blancs et couvrez 10 notions distinctes par thème pour obtenir une estimation exploitable."
     ReadinessStatus.NOT_READY -> "Certains acquis restent fragiles. Concentrez-vous sur les thèmes signalés à retravailler."
     ReadinessStatus.ALMOST_READY -> "Votre niveau se rapproche de l’objectif. Quelques entraînements réguliers peuvent faire la différence."
-    ReadinessStatus.READY -> "Vos résultats récents et votre maîtrise des thèmes indiquent une préparation solide."
+    ReadinessStatus.READY -> "Vos résultats récents et votre maîtrise des thèmes indiquent une préparation solide. Cette estimation ne garantit pas la réussite officielle."
 }
 
 internal fun readinessColor(status: ReadinessStatus): Color = when (status) {
