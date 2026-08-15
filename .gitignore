@@ -1,0 +1,27 @@
+# Android Studio / IntelliJ
+.idea/**
+!.idea/.gitignore
+*.iml
+*.ipr
+*.iws
+
+# Local SDK configuration
+local.properties
+
+# Gradle and Kotlin caches
+.gradle/
+.kotlin/
+**/build/
+
+# Native build outputs
+.cxx/
+.externalNativeBuild/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+captures/
+
+# Generated APKs and bundles
+*.apk
+*.aab
