@@ -196,6 +196,11 @@ private fun AttemptCard(attempt: AttemptEntity, onOpen: () -> Unit, onDelete: ()
             }
             Column(Modifier.weight(1f).padding(horizontal = 13.dp)) {
                 Text(title, fontWeight = FontWeight.Bold)
+                Text(
+                    runCatching { ExamTarget.valueOf(attempt.target).shortLabel }.getOrDefault(attempt.target),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
                 Text(formatDate(attempt.completedAt), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(if (attempt.passed) "Objectif atteint" else "À retravailler", style = MaterialTheme.typography.labelLarge, color = accent)
             }
@@ -259,6 +264,10 @@ private fun AttemptSummary(attempt: AttemptEntity) {
                 Text(if (attempt.passed) "Objectif atteint" else "À consolider", style = MaterialTheme.typography.titleLarge)
                 Text(formatDate(attempt.completedAt), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("Durée : ${formatDuration(attempt.durationSeconds)}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    "Parcours : ${runCatching { ExamTarget.valueOf(attempt.target).label }.getOrDefault(attempt.target)}",
+                    color = MaterialTheme.colorScheme.primary,
+                )
             }
             Text("${attempt.score}/${attempt.total}", style = MaterialTheme.typography.headlineMedium, color = accent)
         }

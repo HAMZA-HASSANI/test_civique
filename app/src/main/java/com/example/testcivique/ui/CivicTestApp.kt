@@ -204,6 +204,7 @@ fun CivicTestApp(darkTheme: Boolean, onToggleTheme: () -> Unit) {
         }
         composable("exam-intro") {
             ExamIntroScreen(
+                target = target,
                 onBack = { navController.popBackStack() },
                 onStart = { navController.navigate("quiz/ALL") },
             )
@@ -239,10 +240,10 @@ private fun MainShell(
     )
     Scaffold(
         topBar = {
-            CivicTopBar(
-                darkTheme = darkTheme,
-                onToggleTheme = onToggleTheme,
-            )
+            Column {
+                CivicTopBar()
+                TargetModeBar(target = target, onTargetChange = onTargetChange)
+            }
         },
         bottomBar = {
             NavigationBar(
@@ -276,8 +277,6 @@ private fun MainShell(
         ) { tab ->
             when (tab) {
                 0 -> HomeScreen(
-                    target = target,
-                    onTargetChange = onTargetChange,
                     onGoToLearn = { selectedTab = 1 },
                     onGoToPractice = { selectedTab = 2 },
                     onStartQuiz = onStartQuiz,
@@ -294,7 +293,7 @@ private fun MainShell(
 }
 
 @Composable
-private fun CivicTopBar(darkTheme: Boolean, onToggleTheme: () -> Unit) {
+private fun CivicTopBar() {
     Surface(color = MaterialTheme.colorScheme.background) {
         Row(
             modifier = Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 20.dp, vertical = 12.dp),
@@ -314,15 +313,28 @@ private fun CivicTopBar(darkTheme: Boolean, onToggleTheme: () -> Unit) {
                     Text("Objectif République", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                modifier = Modifier.size(44.dp),
-            ) {
-                IconButton(onClick = onToggleTheme) {
-                    Icon(
-                        if (darkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
-                        contentDescription = if (darkTheme) "Mode clair" else "Mode sombre",
+        }
+    }
+}
+
+@Composable
+private fun TargetModeBar(target: ExamTarget, onTargetChange: (ExamTarget) -> Unit) {
+    Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 2.dp) {
+        Column(Modifier.fillMaxWidth().padding(start = 20.dp, top = 4.dp, bottom = 8.dp)) {
+            Text(
+                "Parcours actif",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 5.dp)) {
+                items(ExamTarget.entries) { option ->
+                    FilterChip(
+                        selected = target == option,
+                        onClick = { onTargetChange(option) },
+                        label = { Text(option.shortLabel, maxLines = 1) },
+                        leadingIcon = if (target == option) {
+                            { Icon(Icons.Default.CheckCircle, contentDescription = "Parcours sélectionné", modifier = Modifier.size(18.dp)) }
+                        } else null,
                     )
                 }
             }
@@ -332,8 +344,6 @@ private fun CivicTopBar(darkTheme: Boolean, onToggleTheme: () -> Unit) {
 
 @Composable
 private fun HomeScreen(
-    target: ExamTarget,
-    onTargetChange: (ExamTarget) -> Unit,
     onGoToLearn: () -> Unit,
     onGoToPractice: () -> Unit,
     onStartQuiz: (CivicThemeId) -> Unit,
@@ -347,20 +357,6 @@ private fun HomeScreen(
         item {
             Text("Bonjour 👋", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text("Prêt à progresser ?", style = MaterialTheme.typography.headlineMedium)
-        }
-        item {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ExamTarget.entries.forEach { option ->
-                    FilterChip(
-                        selected = target == option,
-                        onClick = { onTargetChange(option) },
-                        label = { Text(option.shortLabel) },
-                        leadingIcon = if (target == option) {
-                            { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
-                        } else null,
-                    )
-                }
-            }
         }
         item { HeroPreparationCard(progress = progress, onOpenExam = onOpenExam) }
         item {
@@ -711,7 +707,7 @@ private fun LearningDetailScreen(theme: CivicThemeId, onBack: () -> Unit, onStar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ExamIntroScreen(onBack: () -> Unit, onStart: () -> Unit) {
+private fun ExamIntroScreen(target: ExamTarget, onBack: () -> Unit, onStart: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -731,6 +727,16 @@ private fun ExamIntroScreen(onBack: () -> Unit, onStart: () -> Unit) {
             ) { Icon(Icons.Default.EmojiEvents, contentDescription = null, tint = CivicGold, modifier = Modifier.size(58.dp)) }
             Text("Dans les conditions de l'examen", style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 20.dp))
             Text("Un entraînement chronométré pour mesurer vos acquis sur les cinq thèmes.", color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp))
+            Surface(
+                shape = RoundedCornerShape(50),
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.padding(top = 16.dp),
+            ) {
+                Row(Modifier.padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                    Text("Parcours : ${target.label}", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 7.dp))
+                }
+            }
             Spacer(Modifier.height(24.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 ExamInfoBadge(Icons.Default.Quiz, "40", "questions", Modifier.weight(1f))
@@ -838,7 +844,13 @@ private fun QuizScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (isMock) "Examen blanc" else theme!!.shortTitle, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                title = {
+                    Text(
+                        "${if (isMock) "Examen blanc" else theme!!.shortTitle} • ${target.shortLabel}",
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quitter") } },
                 actions = {
                     if (isMock && !finished) {
@@ -876,7 +888,9 @@ private fun QuizScreen(
                 score = score,
                 total = questions.size,
                 isMock = isMock,
+                target = target,
                 saved = savedAttemptId != null,
+                reviews = questions.mapIndexed { index, question -> QuizReview(question, answers[index] ?: -1) },
                 onBack = onBack,
                 onRetry = {
                     runId++
@@ -914,51 +928,72 @@ private fun QuizScreen(
                     )
                 }
                 Surface(shadowElevation = 14.dp, color = MaterialTheme.colorScheme.surface) {
-                    Button(
-                        onClick = {
-                            val question = questions[currentIndex]
-                            if (isMock) {
-                                answers[currentIndex] = selectedIndex
-                                if (selectedIndex == question.correctIndex) {
-                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                }
-                                if (currentIndex == questions.lastIndex) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().navigationBarsPadding().padding(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                if (selectedIndex >= 0) answers[currentIndex] = selectedIndex
+                                currentIndex--
+                                selectedIndex = answers[currentIndex] ?: -1
+                                validated = false
+                            },
+                            enabled = currentIndex > 0,
+                            modifier = Modifier.weight(0.38f).height(52.dp),
+                            shape = RoundedCornerShape(16.dp),
+                        ) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                            Text("Précédente", modifier = Modifier.padding(start = 4.dp), maxLines = 1)
+                        }
+                        Button(
+                            onClick = {
+                                val question = questions[currentIndex]
+                                if (isMock) {
+                                    answers[currentIndex] = selectedIndex
+                                    if (selectedIndex == question.correctIndex) {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    }
+                                    if (currentIndex == questions.lastIndex) {
+                                        finished = true
+                                    } else {
+                                        currentIndex++
+                                        selectedIndex = answers[currentIndex] ?: -1
+                                    }
+                                } else if (!validated) {
+                                    answers[currentIndex] = selectedIndex
+                                    validated = true
+                                    if (selectedIndex == question.correctIndex) {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    } else {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    }
+                                } else if (currentIndex == questions.lastIndex) {
                                     finished = true
                                 } else {
                                     currentIndex++
-                                    selectedIndex = -1
+                                    selectedIndex = answers[currentIndex] ?: -1
+                                    validated = false
                                 }
-                            } else if (!validated) {
-                                answers[currentIndex] = selectedIndex
-                                validated = true
-                                if (selectedIndex == question.correctIndex) {
-                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                } else {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                }
-                            } else if (currentIndex == questions.lastIndex) {
-                                finished = true
-                            } else {
-                                currentIndex++
-                                selectedIndex = -1
-                                validated = false
-                            }
-                        },
-                        enabled = selectedIndex >= 0,
-                        modifier = Modifier.fillMaxWidth().navigationBarsPadding().padding(16.dp).height(52.dp),
-                        shape = RoundedCornerShape(16.dp),
-                    ) {
-                        Text(
-                            when {
-                                isMock && currentIndex == questions.lastIndex -> "Terminer l’examen"
-                                isMock -> "Question suivante"
-                                !validated -> "Valider ma réponse"
-                                currentIndex == questions.lastIndex -> "Voir mon résultat"
-                                else -> "Question suivante"
                             },
-                        )
-                        if (validated || isMock) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.padding(start = 8.dp))
+                            enabled = selectedIndex >= 0,
+                            modifier = Modifier.weight(0.62f).height(52.dp),
+                            shape = RoundedCornerShape(16.dp),
+                        ) {
+                            Text(
+                                when {
+                                    isMock && currentIndex == questions.lastIndex -> "Terminer l’examen"
+                                    isMock -> "Question suivante"
+                                    !validated -> "Valider ma réponse"
+                                    currentIndex == questions.lastIndex -> "Voir mon résultat"
+                                    else -> "Question suivante"
+                                },
+                                maxLines = 1,
+                            )
+                            if (validated || isMock) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.padding(start = 8.dp))
+                            }
                         }
                     }
                 }
@@ -1049,12 +1084,16 @@ private fun AnswerOption(index: Int, text: String, selected: Boolean, correct: B
     }
 }
 
+private data class QuizReview(val question: Question, val selectedIndex: Int)
+
 @Composable
 private fun ResultScreen(
     score: Int,
     total: Int,
     isMock: Boolean,
+    target: ExamTarget,
     saved: Boolean,
+    reviews: List<QuizReview>,
     onBack: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
@@ -1082,6 +1121,35 @@ private fun ResultScreen(
                 ResultLine("Seuil de réussite", if (isMock) "32/40" else "16/20")
                 HorizontalDivider(Modifier.padding(vertical = 12.dp))
                 ResultLine("Mode", if (isMock) "Examen blanc" else "QCM thématique")
+                HorizontalDivider(Modifier.padding(vertical = 12.dp))
+                ResultLine("Parcours", target.label)
+            }
+        }
+        val mistakes = reviews.filter { it.selectedIndex != it.question.correctIndex }
+        if (mistakes.isEmpty()) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = CivicGreen.copy(alpha = 0.14f)),
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 18.dp),
+            ) {
+                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = CivicGreen)
+                    Text("Toutes les réponses sont correctes.", modifier = Modifier.padding(start = 10.dp), fontWeight = FontWeight.SemiBold)
+                }
+            }
+        } else {
+            Text(
+                "Questions à revoir (${mistakes.size})",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.fillMaxWidth().padding(top = 22.dp),
+            )
+            Text(
+                "Retrouvez votre réponse, la bonne réponse et l’explication.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+            )
+            mistakes.forEach { mistake ->
+                QuizMistakeCard(mistake, modifier = Modifier.padding(top = 12.dp))
             }
         }
         Button(onClick = onRetry, modifier = Modifier.fillMaxWidth().padding(top = 22.dp).height(52.dp), shape = RoundedCornerShape(16.dp)) {
@@ -1099,6 +1167,25 @@ private fun ResultScreen(
             color = if (saved) CivicGreen else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 18.dp),
         )
+    }
+}
+
+@Composable
+private fun QuizMistakeCard(review: QuizReview, modifier: Modifier = Modifier) {
+    val question = review.question
+    val selected = question.options.getOrNull(review.selectedIndex) ?: "Aucune réponse"
+    val correct = question.options.getOrNull(question.correctIndex).orEmpty()
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(18.dp),
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Text(question.text, fontWeight = FontWeight.SemiBold)
+            Text("Votre réponse : $selected", color = CivicRed, modifier = Modifier.padding(top = 10.dp))
+            Text("Bonne réponse : $correct", color = CivicGreen, modifier = Modifier.padding(top = 5.dp))
+            Text(question.explanation, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 9.dp))
+        }
     }
 }
 

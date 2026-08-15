@@ -47,4 +47,14 @@ class QuestionBankEditorialTest {
             assertTrue("Missing source title: ${question.id}", question.sourceTitle.isNotBlank())
         }
     }
+
+    @Test
+    fun `audited prompts match the expected answer form`() {
+        val canonical = DemoContent.canonicalQuestions.associateBy { it.id }
+        assertEquals("Oui, il doit rester neutre et traiter tous les usagers également", canonical.getValue("p15").options[canonical.getValue("p15").correctIndex])
+        assertEquals("Toute personne présente en France", canonical.getValue("d2").options[canonical.getValue("d2").correctIndex])
+        assertEquals("Aider ou alerter les secours sans se mettre en danger sérieux", canonical.getValue("d10").options[canonical.getValue("d10").correctIndex])
+        assertEquals("Aux personnes mineures", canonical.getValue("d14").options[canonical.getValue("d14").correctIndex])
+        assertEquals("Le conseil municipal", canonical.getValue("i08").options[canonical.getValue("i08").correctIndex])
+    }
 }

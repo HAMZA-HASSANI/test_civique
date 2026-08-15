@@ -7,6 +7,14 @@ import org.junit.Test
 
 class QuestionGeneratorTest {
     @Test
+    fun `all three application targets use the complete bank`() {
+        assertEquals(3, ExamTarget.entries.size)
+        ExamTarget.entries.forEach { target ->
+            assertTrue(DemoContent.questions.all { target in it.targets })
+        }
+    }
+
+    @Test
     fun `bank contains at least one hundred formulations per theme and target`() {
         ExamTarget.entries.forEach { target ->
             QuestionGenerator.questionCountsByTheme(target).forEach { (_, count) ->

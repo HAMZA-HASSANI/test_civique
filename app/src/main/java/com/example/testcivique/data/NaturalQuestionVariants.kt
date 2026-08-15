@@ -89,15 +89,15 @@ internal object NaturalQuestionVariants {
         ),
         "p15" to listOf(
             "Un agent public peut-il avantager un usager en raison de sa religion ?",
-            "Comment un agent public doit-il traiter des usagers de religions différentes ?",
-            "La neutralité autorise-t-elle un agent public à favoriser les personnes de sa confession ?",
-            "Un usager partage la religion de l’agent qui l’accueille. Peut-il bénéficier d’un traitement préférentiel ?",
+            "Un agent public doit-il traiter de manière égale des usagers de religions différentes ?",
+            "La neutralité impose-t-elle à un agent public de traiter les usagers de la même manière ?",
+            "Un agent public doit-il refuser tout traitement préférentiel fondé sur la religion d’un usager ?",
         ),
         "p16" to listOf(
-            "Une élève peut-elle porter un signe religieux ostensible dans une école publique ?",
+            "Quelle règle s’applique aux signes religieux ostensibles portés par les élèves d’une école publique ?",
             "Quelle règle concerne les signes religieux ostensibles à l’école publique ?",
             "Dans un collège public, que prévoit la loi pour les signes religieux ostensibles portés par les élèves ?",
-            "Le port d’un signe manifestant ostensiblement une religion est-il permis aux élèves d’un lycée public ?",
+            "Que prévoit la loi pour le port d’un signe manifestant ostensiblement une religion dans un lycée public ?",
         ),
         "p17" to listOf(
             "Écarter un candidat en raison de son origine constitue-t-il une pratique légale ?",
@@ -156,20 +156,20 @@ internal object NaturalQuestionVariants {
         ),
         "i06" to listOf(
             "Par quel mode de scrutin les députés sont-ils élus ?",
-            "Les citoyens élisent-ils directement leurs députés ?",
+            "Quel type de suffrage permet aux citoyens de désigner directement leurs députés ?",
             "De quelle manière les députés siégeant à l’Assemblée nationale sont-ils désignés ?",
             "Le mandat de député est obtenu selon quel type de suffrage ?",
         ),
         "i07" to listOf(
             "Quel type de suffrage sert à élire les sénateurs ?",
-            "Les sénateurs sont-ils élus directement par l’ensemble des citoyens ?",
+            "Quel mode de scrutin désigne les sénateurs ?",
             "De quelle manière les membres du Sénat sont-ils élus ?",
             "Comment le collège des grands électeurs désigne-t-il les sénateurs ?",
         ),
         "i08" to listOf(
             "Quelle assemblée choisit le maire après les élections municipales ?",
             "Par qui le maire d’une commune est-il élu ?",
-            "Les habitants élisent-ils directement leur maire ?",
+            "Quelle instance élit le maire après les élections municipales ?",
             "Qui désigne le maire parmi les conseillers municipaux ?",
         ),
         "i09" to listOf(
@@ -252,10 +252,10 @@ internal object NaturalQuestionVariants {
             "Combien d’années faut-il avoir pour être juridiquement majeur ?",
         ),
         "d2" to listOf(
-            "Qui doit respecter les lois françaises ?",
-            "La loi française s’impose-t-elle aussi aux personnes étrangères présentes en France ?",
-            "Le respect de la loi s’impose-t-il à toutes les personnes présentes sur le territoire ?",
-            "Peut-on ignorer une loi française au motif que l’on n’est pas citoyen français ?",
+            "Quelles personnes sont tenues de respecter les lois françaises ?",
+            "Quelles personnes étrangères présentes en France doivent respecter la loi française ?",
+            "À qui le respect de la loi française s’impose-t-il sur le territoire ?",
+            "Quelles personnes doivent respecter la loi, même si elles ne sont pas citoyennes françaises ?",
         ),
         "d3" to listOf(
             "Quel droit la liberté de la presse garantit-elle ?",
@@ -300,9 +300,9 @@ internal object NaturalQuestionVariants {
             "Peut-on choisir de ne jamais déclarer ses revenus ?",
         ),
         "d10" to listOf(
-            "Quelle obligation existe lorsqu’une personne est en danger ?",
-            "Doit-on aider une personne en péril lorsque cela ne crée pas de danger sérieux ?",
-            "L’assistance à une personne en danger est-elle prévue par la loi ?",
+            "Quelle aide faut-il apporter lorsqu’une personne est en danger ?",
+            "Que peut-on faire pour aider une personne en péril sans créer de danger sérieux ?",
+            "Quelle conduite la loi attend-elle face à une personne en danger ?",
             "Que faut-il faire face à un danger grave si l’on peut intervenir ou alerter sans risque sérieux ?",
         ),
         "d11" to listOf(
@@ -326,7 +326,7 @@ internal object NaturalQuestionVariants {
         "d14" to listOf(
             "La vente de boissons alcoolisées est interdite à quel public ?",
             "À qui un commerçant ne peut-il pas vendre d’alcool ?",
-            "Une personne mineure peut-elle acheter légalement de l’alcool ?",
+            "À qui la vente d’alcool est-elle interdite en France ?",
             "À quelles personnes la vente d’alcool est-elle interdite en raison de leur âge ?",
         ),
         "d15" to listOf(

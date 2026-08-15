@@ -3,6 +3,7 @@ package com.example.testcivique.data
 enum class ExamTarget(val label: String, val shortLabel: String) {
     NATURALISATION("Naturalisation", "Naturalisation"),
     CARTE_RESIDENT("Carte de résident", "Carte résident"),
+    CARTE_PLURIANNUELLE("Carte pluriannuelle", "Carte pluriannuelle"),
 }
 
 enum class CivicThemeId(
@@ -162,7 +163,7 @@ object DemoContent {
         Question("i4", CivicThemeId.INSTITUTIONS, "Qui représente l'État dans un département ?", listOf("Le maire", "Le préfet", "Le député européen", "Le président du conseil municipal"), 1, "Le préfet représente l'État dans le département."),
 
         Question("d1", CivicThemeId.RIGHTS, "Quel est l'âge de la majorité civile en France ?", listOf("16 ans", "18 ans", "20 ans", "21 ans"), 1, "La majorité civile est fixée à 18 ans."),
-        Question("d2", CivicThemeId.RIGHTS, "Est-il obligatoire de respecter la loi ?", listOf("Seulement pour les citoyens", "Uniquement au travail", "Oui, pour toute personne présente en France", "Non, si l'on n'est pas d'accord"), 2, "Toute personne présente en France doit respecter la loi."),
+        Question("d2", CivicThemeId.RIGHTS, "Quelles personnes doivent respecter la loi française ?", listOf("Les citoyens français seulement", "Les personnes au travail uniquement", "Toute personne présente en France", "Personne si elle n'est pas d'accord"), 2, "Toute personne présente en France doit respecter la loi."),
         Question("d3", CivicThemeId.RIGHTS, "Que protège la liberté de la presse ?", listOf("La possibilité d'informer dans le respect de la loi", "L'interdiction de toute critique", "Le droit de publier des menaces", "Le secret de toutes les infractions"), 0, "Elle protège l'information et l'expression journalistique dans le cadre légal."),
         Question("d4", CivicThemeId.RIGHTS, "Le devoir de solidarité signifie notamment :", listOf("Ne jamais payer d'impôts", "Aider les personnes en difficulté selon ses possibilités", "Refuser toute règle commune", "Voter à la place des autres"), 1, "La solidarité fait partie des responsabilités de chacun dans la société."),
 
